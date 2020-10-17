@@ -27,51 +27,45 @@ import java.util.List;
 
 public class LocationService extends Service
 {
-    // MOVE TO CONSTRUCTOR!!!
-    // locationCallBack - Used for receiving notifications from the FusedLocationProviderApi when the device location has changed or can no longer be determined
-    private LocationCallback locationCallBack = new LocationCallback()
-    {
-        //event that is triggered whenever the update interval is met
-        @Override
-        public void onLocationResult(LocationResult locationResult)
-        {
-            super.onLocationResult(locationResult);
+    private LocationCallback locationCallBack ; //Used for receiving notifications from the FusedLocationProviderApi
+                                                // when the device location has changed or can no longer be determined
+    private Location location; // user's location
 
-            if(locationResult!=null && locationResult.getLastLocation()!=null)
-            {
-                // MOVE variable definition!!
-                //handle location result
-                double latitude = locationResult.getLastLocation().getLatitude();
-                double longitude = locationResult.getLastLocation().getLongitude();
-                Log.d("Location update", latitude + ", " + longitude + ", " + getUserAdress(locationResult.getLastLocation()));
-            }
-        }
-    };
-
-    private String getUserAdress(Location lastLocation)
-    {
-        // get address from location and show it
-        Geocoder geocoder = new Geocoder(LocationService.this);
-        try
-        {
-            List<Address> addressList = geocoder.getFromLocation(lastLocation.getLatitude(), lastLocation.getLongitude(), Constants.MAX_RESULTS);
-            return (addressList.get(0).getAddressLine(0));
-
-        }
-        catch (Exception e)
-        {
-           return("Unable to get address");
-        }
-    }
-
-    // used only in bound services yet must be overridden
-    @Nullable
+    // triggered when starting the service (every single time)
     @Override
-    public IBinder onBind(Intent intent)
+    public int onStartCommand(Intent intent, int flag, int startId)
     {
-        // -----------
-        throw new UnsupportedOperationException("Not yet implemented");
+        locationCallBack = new LocationCallback()
+        {
+            //event that is triggered whenever the update interval is met
+            @Override
+            public void onLocationResult(LocationResult locationResult)
+            {
+                super.onLocationResult(locationResult);
+                // if the location is available
+                if(locationResult!=null && locationResult.getLastLocation()!=null)
+                {
+                    //handle location result
+                     location = locationResult.getLastLocation();
+                     double  latitude = location.getLatitude();
+                     double longitude = location.getLongitude();
+                     Log.d("Location update", latitude + ", " + longitude + ", " + getUserAddress(location));
+                }
+            }
+        };
+        // start location service
+        startLocationService();
+        //  return the value that indicates what semantics the system should use for the service's current started state
+        return super.onStartCommand(intent, flag, startId);
     }
+
+    // called through stopService() and stops the service
+    @Override
+    public void onDestroy()
+    {
+        stopLocationService();
+    }
+
 
     // why not public?
     @SuppressLint("MissingPermission")
@@ -110,8 +104,8 @@ public class LocationService extends Service
 
         // tidy!!!
         LocationRequest locationRequest = new LocationRequest();
-        locationRequest.setInterval(30000); // set interval in which I want to get location in
-        locationRequest.setFastestInterval(5000); // if a location is ready sooner, I can get it
+        locationRequest.setInterval(5000); // set interval in which I want to get location in
+        locationRequest.setFastestInterval(2000);
         // according to button
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
@@ -125,6 +119,7 @@ public class LocationService extends Service
 
     }
 
+
     private void stopLocationService()
     {
         // see how was handled in main
@@ -135,29 +130,29 @@ public class LocationService extends Service
         stopSelf();
     }
 
-    @Override
-    // triggered when starting the service (every single time)
-    public int onStartCommand(Intent intent, int flag, int startId)
+
+    private String getUserAddress(Location lastLocation)
     {
-        if (intent!=null)
+        // get address from location and show it
+        Geocoder geocoder = new Geocoder(LocationService.this);
+        try
         {
-            // what action should be done - REMOVE!!! deal like in the foreground service tutorial
-            String action = intent.getAction();
-            if(action!=null)
-            {
-                if (action.equals(Constants.ACTION_START_SERVICE))
-                {
-                    startLocationService();
-                }
-                else if (action.equals(Constants.ACTION_END_SERVICE))
-                {
-                    stopLocationService();
-                }
-            }
+            List<Address> addressList = geocoder.getFromLocation(lastLocation.getLatitude(), lastLocation.getLongitude(), Constants.MAX_RESULTS);
+            return (addressList.get(0).getAddressLine(0));
+
         }
-        return super.onStartCommand(intent, flag, startId);
+        catch (Exception e)
+        {
+           return("Unable to get address");
+        }
     }
 
 
-
+    // used only in bound services yet must be overridden
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent)
+    {
+        return null;
+    }
 }

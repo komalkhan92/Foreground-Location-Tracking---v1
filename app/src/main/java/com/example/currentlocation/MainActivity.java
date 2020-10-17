@@ -117,33 +117,30 @@ public class MainActivity extends AppCompatActivity
         return false;
     }
 
-    // next two functions - check last project
-
-    // add description
+    // triggers starting the location service
     private void startLocationService()
     {
         // if location service isn't running
         if(!isLocationServiceRunning())
         {
-            //
-            Intent intent = new Intent(getApplicationContext(), LocationService.class);
-            intent.setAction(Constants.ACTION_START_SERVICE);
-            startService(intent);
+            // create an intent to trigger the service
+            Intent intent = new Intent(getApplicationContext(), LocationService.class); // second parameter is the class we want to open
+            // start the service
+            ContextCompat.startForegroundService(this, intent);
             Toast.makeText(this, "Location Service has started",Toast.LENGTH_SHORT).show();
         }
     }
 
-    // add description
+    // triggers stopping the location service
     private void stopLocationService()
     {
         // if location service is running
         if(isLocationServiceRunning())
         {
-            //
+            // create an intent to trigger the service
             Intent intent = new Intent(getApplicationContext(), LocationService.class);
-            intent.setAction(Constants.ACTION_END_SERVICE);
-            //CHANGE!!!!
-            startService(intent);
+            // stop location service
+            stopService(intent);
             Toast.makeText(this, "Location Service stopped", Toast.LENGTH_SHORT).show();
         }
     }
