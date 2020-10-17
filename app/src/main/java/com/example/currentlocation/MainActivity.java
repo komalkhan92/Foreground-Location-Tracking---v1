@@ -15,10 +15,15 @@ import android.widget.CompoundButton;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import static com.example.currentlocation.Constants.EMPTY;
+import static com.example.currentlocation.Constants.PERMISSION_PLACE;
+import static com.example.currentlocation.Constants.PERMISSION_PLACE;
+
 public class MainActivity extends AppCompatActivity
 {
 
-    private final int REQUEST_CODE_LOCATION_PERMISSION = 1; //CHECK IN SUAD LOCATION
+
+    private final static int PERMISSION_FINE_LOCATION = 1; //permission request number, identifies the permission
     private ToggleButton toggle; // used to switch the service on and off
 
     @Override
@@ -28,6 +33,11 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         // create toggle button
         toggle = (ToggleButton) findViewById(R.id.toggleButton);
+        // present the toggle button as on if the app has been opened again and the service is still running
+        if(isLocationServiceRunning())
+        {
+            toggle.setChecked(true);
+        }
         // set a listener for interactions
         toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
         {
@@ -41,40 +51,47 @@ public class MainActivity extends AppCompatActivity
                     if(ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
                     {
                         // request fine location permission
-                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_CODE_LOCATION_PERMISSION);
+                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_FINE_LOCATION);
                     }
                     else
                     {
+                        // the app has permission - start location service
                         startLocationService();
                     }
                 }
                 else
                 {
+                    // the button has been switched off - stop location service
                     stopLocationService();
                 }
             }
         });
     }
 
-    // DOCUMENTATION FROM LAST BASIC
+
     // Callback for the result from requesting permissions.
     @Override
     public void onRequestPermissionsResult (int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
     {
         super.onRequestPermissionsResult(requestCode,permissions,grantResults);
-        if(requestCode == REQUEST_CODE_LOCATION_PERMISSION && grantResults.length>0)
+        // if permission is granted
+        if(requestCode == PERMISSION_FINE_LOCATION && grantResults.length>EMPTY)
+
         {
-            if(grantResults[0] == PackageManager.PERMISSION_GRANTED)
+            if(grantResults[PERMISSION_PLACE] == PackageManager.PERMISSION_GRANTED)
             {
+                // start location service
                 startLocationService();
             }
             else
             {
+                // didn't get permission, notify user
                 Toast.makeText(this, "You must enable these permissions inorder to to use this app", Toast.LENGTH_SHORT);
             }
         }
     }
 
+    // returns is the location service running
     private boolean isLocationServiceRunning()
     {
         ActivityManager activityManager = (ActivityManager)getSystemService(Context.ACTIVITY_SERVICE);
