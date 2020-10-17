@@ -17,7 +17,6 @@ import android.widget.ToggleButton;
 
 import static com.example.currentlocation.Constants.EMPTY;
 import static com.example.currentlocation.Constants.PERMISSION_PLACE;
-import static com.example.currentlocation.Constants.PERMISSION_PLACE;
 
 public class MainActivity extends AppCompatActivity
 {
@@ -91,19 +90,22 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    // returns is the location service running
+    // returns is the location service running (as foreground)
     private boolean isLocationServiceRunning()
     {
+        // get to the handle to the ActivityManager for interacting with the global activity state of the system.
         ActivityManager activityManager = (ActivityManager)getSystemService(Context.ACTIVITY_SERVICE);
         if(activityManager != null)
         {
-            // does -
+            // goes over every service in the system that is currently running
+            // get running services - returns a list of RunningServiceInfo records describing each of the running tasks.
+            // the max_value represents the maximum number of entries to return in the list
             for(ActivityManager.RunningServiceInfo service : activityManager.getRunningServices(Integer.MAX_VALUE))
             {
-                // if location service is running
+                // if the running service being inspected is the location service
                 if(LocationService.class.getName().equals(service.service.getClassName()))
                 {
-                    // if the service is running as a foreground service
+                    // check if its running as foreground
                     if(service.foreground)
                     {
                         return true;
