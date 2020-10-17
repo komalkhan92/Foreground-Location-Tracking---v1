@@ -81,9 +81,9 @@ public class LocationService extends Service
         String channel_id = "location_notification_channel"; //MOVE&document / constant
         // get notification manager
         NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-        Intent resultIntent = new Intent();
+        Intent notificationIntent = new Intent(this, MainActivity.class); // will take to the mainActivity when notification is clicked
         // to set it on a notification, must create a pending intent
-        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0,resultIntent,
+        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0,notificationIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT); //Flag indicating that if the described PendingIntent already exists, then keep it but replace its extra data with what is in this new Intent.
         // create the notification builder (set it's params)
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), channel_id);
@@ -91,6 +91,7 @@ public class LocationService extends Service
         builder.setContentTitle("Tracking Location...");
         builder.setContentText("Tracking your location... You may disable the service at any time");
         builder.setContentIntent(pendingIntent);
+        builder.setStyle(new NotificationCompat.BigTextStyle()); // make notification expandable
         builder.setPriority(NotificationCompat.PRIORITY_DEFAULT); // he did max (and added defaults)
 
         // notification is necessary only if the version is over 26
@@ -109,8 +110,8 @@ public class LocationService extends Service
 
         // tidy!!!
         LocationRequest locationRequest = new LocationRequest();
-        locationRequest.setInterval(4000); // set interval in which I want to get location in
-        locationRequest.setFastestInterval(2000); // if a location is ready sooner, I can get it
+        locationRequest.setInterval(30000); // set interval in which I want to get location in
+        locationRequest.setFastestInterval(5000); // if a location is ready sooner, I can get it
         // according to button
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
