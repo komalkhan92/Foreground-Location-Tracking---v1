@@ -27,6 +27,8 @@ import java.util.List;
 
 public class LocationService extends Service
 {
+    public static final int DEFAULT_INTERVAL = 4000;
+    public static final int FASTEST_INTERVAL = 2000;
     private LocationCallback locationCallBack ; //Used for receiving notifications from the FusedLocationProviderApi
                                                 // when the device location has changed or can no longer be determined
     private Location location; // user's location
@@ -49,7 +51,7 @@ public class LocationService extends Service
                      location = locationResult.getLastLocation();
                      double  latitude = location.getLatitude();
                      double longitude = location.getLongitude();
-                     Log.d("Location update", latitude + ", " + longitude + ", " + getUserAddress(location));
+                     Log.d("Location update", latitude + ", " + longitude + ", ");
                 }
             }
         };
@@ -67,7 +69,7 @@ public class LocationService extends Service
     }
 
 
-    // why not public?
+    // starts the service
     @SuppressLint("MissingPermission")
     private void startLocationService()
     {
@@ -82,7 +84,7 @@ public class LocationService extends Service
         // create the notification builder (set it's params)
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), channel_id);
         builder.setSmallIcon(R.drawable.ic_baseline);
-        builder.setContentTitle("Tracking Location...");
+        builder.setContentTitle("Tracking Location");
         builder.setContentText("Tracking your location... You may disable the service at any time");
         builder.setContentIntent(pendingIntent);
         builder.setStyle(new NotificationCompat.BigTextStyle()); // make notification expandable
@@ -102,11 +104,10 @@ public class LocationService extends Service
             }
         }
 
-        // tidy!!!
+        // ------- move to function
         LocationRequest locationRequest = new LocationRequest();
-        locationRequest.setInterval(5000); // set interval in which I want to get location in
-        locationRequest.setFastestInterval(2000);
-        // according to button
+        locationRequest.setInterval(DEFAULT_INTERVAL); // set interval in which I want to get location in
+        locationRequest.setFastestInterval(FASTEST_INTERVAL);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         // see how was handled in main
@@ -131,13 +132,13 @@ public class LocationService extends Service
     }
 
 
-    private String getUserAddress(Location lastLocation)
+    private String getUserAddress()
     {
         // get address from location and show it
         Geocoder geocoder = new Geocoder(LocationService.this);
         try
         {
-            List<Address> addressList = geocoder.getFromLocation(lastLocation.getLatitude(), lastLocation.getLongitude(), Constants.MAX_RESULTS);
+            List<Address> addressList = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), Constants.MAX_RESULTS);
             return (addressList.get(0).getAddressLine(0));
 
         }
