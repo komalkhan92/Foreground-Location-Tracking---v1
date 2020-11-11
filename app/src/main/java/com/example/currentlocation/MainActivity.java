@@ -54,6 +54,8 @@ public class MainActivity extends AppCompatActivity
                     }
                     else
                     {
+                        // initiate socket
+                        SockMngr.initiate();
                         // the app has permission - start location service
                         startLocationService();
                     }
