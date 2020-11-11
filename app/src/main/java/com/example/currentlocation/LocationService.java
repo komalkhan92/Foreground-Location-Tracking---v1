@@ -1,3 +1,4 @@
+// final consistent location tracker
 package com.example.currentlocation;
 
 import android.annotation.SuppressLint;
@@ -27,11 +28,16 @@ import java.util.List;
 
 public class LocationService extends Service
 {
-    public static final int DEFAULT_INTERVAL = 4000;
-    public static final int FASTEST_INTERVAL = 2000;
+    private static final String CHANNEL_ID = "location_notification_channel"; // notification channel id
+    private static final String CHANNEL_NAME = "Location Service"; // The user visible name of the notification channel
+    private static final String CHANNEL_DESCRIPTION = "This channel is used by location service"; // notification channel description
+    private static final int REQUEST_CODE = 0; // private request code for the sender of the pending intent
+    public static final int DEFAULT_INTERVAL = 4000; // default location update interval
+    public static final int FASTEST_INTERVAL = 2000; // fastest location update interval
     private LocationCallback locationCallBack ; //Used for receiving notifications from the FusedLocationProviderApi
                                                 // when the device location has changed or can no longer be determined
-    private Location location; // user's location
+    private Location location; // last known location or updated location
+    private LocationRequest locationRequest; //
 
     // triggered when starting the service (every single time)
     @Override
@@ -51,7 +57,7 @@ public class LocationService extends Service
                      location = locationResult.getLastLocation();
                      double  latitude = location.getLatitude();
                      double longitude = location.getLongitude();
-                     Log.d("Location update", latitude + ", " + longitude + ", ");
+                     Log.d("Location update", latitude + ", " + longitude + ", " + getUserAddress());
                 }
             }
         };
@@ -73,45 +79,39 @@ public class LocationService extends Service
     @SuppressLint("MissingPermission")
     private void startLocationService()
     {
-        // set notification channel id
-        String channel_id = "location_notification_channel"; //MOVE&document / constant
-        // get notification manager
-        NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+        /// get notification manager
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         Intent notificationIntent = new Intent(this, MainActivity.class); // will take to the mainActivity when notification is clicked
         // to set it on a notification, must create a pending intent
-        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0,notificationIntent,
+        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), REQUEST_CODE, notificationIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT); //Flag indicating that if the described PendingIntent already exists, then keep it but replace its extra data with what is in this new Intent.
-        // create the notification builder (set it's params)
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), channel_id);
-        builder.setSmallIcon(R.drawable.ic_baseline);
-        builder.setContentTitle("Tracking Location");
-        builder.setContentText("Tracking your location... You may disable the service at any time");
-        builder.setContentIntent(pendingIntent);
-        builder.setStyle(new NotificationCompat.BigTextStyle()); // make notification expandable
-        builder.setPriority(NotificationCompat.PRIORITY_DEFAULT); // he did max (and added defaults)
+        // create and configure the notification
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID);
+        configNotification(builder, pendingIntent);
+
 
         // notification is necessary only if the version is over 26
         // check where was put it my service
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
         {
-            // if notification channel is empty???
-            if(notificationManager != null && notificationManager.getNotificationChannel(channel_id) == null)
+            // if notification channel is empty
+            if(notificationManager != null && notificationManager.getNotificationChannel(CHANNEL_ID) == null)
             {
-                // create the notification channel?
-                NotificationChannel notificationChannel = new NotificationChannel(channel_id, "Location Service", NotificationManager.IMPORTANCE_HIGH);
-                notificationChannel.setDescription("Description - This channel is used by location service");
+                // create the notification channel
+                NotificationChannel notificationChannel = new NotificationChannel(CHANNEL_ID, CHANNEL_NAME
+
+
+                        , NotificationManager.IMPORTANCE_HIGH);
+                notificationChannel.setDescription(CHANNEL_DESCRIPTION);
                 notificationManager.createNotificationChannel(notificationChannel);
             }
         }
 
-        // ------- move to function
-        LocationRequest locationRequest = new LocationRequest();
-        locationRequest.setInterval(DEFAULT_INTERVAL); // set interval in which I want to get location in
-        locationRequest.setFastestInterval(FASTEST_INTERVAL);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        // create and configure location request
+         locationRequest = new LocationRequest();
+        configLocationRequest();
 
-        // see how was handled in main
-        // check whats looper
+        // request location updates according to the parameters in the locationRequest - callBacks performed on the mainLooper (in the mainThread)
         LocationServices.getFusedLocationProviderClient(this).requestLocationUpdates(locationRequest, locationCallBack, Looper.getMainLooper());
         // start service!
         startForeground(Constants.LOCATION_SERVICE_ID, builder.build());
@@ -123,8 +123,7 @@ public class LocationService extends Service
 
     private void stopLocationService()
     {
-        // see how was handled in main
-        // check whats looper
+        // Remove all location updates for the given location result listener
         LocationServices.getFusedLocationProviderClient(this).removeLocationUpdates(locationCallBack);
         // stop the service and remove the notification
         stopForeground(true);
@@ -148,6 +147,24 @@ public class LocationService extends Service
         }
     }
 
+    //  set the various fields of the notification
+    public void configNotification(NotificationCompat.Builder builder, PendingIntent pendingIntent)
+    {
+        builder.setSmallIcon(R.drawable.ic_baseline);
+        builder.setContentTitle("Tracking Location");
+        builder.setContentText("Tracking your location... You may disable the service at any time");
+        builder.setContentIntent(pendingIntent);
+        builder.setStyle(new NotificationCompat.BigTextStyle()); // make notification expandable
+        builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
+    }
+
+    // configure location request
+    public void configLocationRequest()
+    {
+        locationRequest.setInterval(DEFAULT_INTERVAL); // set interval in which we want to get location in
+        locationRequest.setFastestInterval(FASTEST_INTERVAL);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    }
 
     // used only in bound services yet must be overridden
     @Nullable
