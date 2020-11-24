@@ -8,7 +8,8 @@ public class SockMngr {
 
 
     public static  Socket socket;
-    public static String text2send = "Hello";
+    public static String text2send;
+    public static final int TIMEOUT = 1000;
     public static String response;
     private final static Object syncObj = new Object();
     private static boolean waitDone = false;
@@ -38,7 +39,7 @@ public class SockMngr {
                 waitDone = false;
                 //Wait the current Thread for 15 seconds
                 while (!waitDone)
-                    syncObj.wait(1000);
+                    syncObj.wait(TIMEOUT);
             }
         }
         catch (InterruptedException e) {

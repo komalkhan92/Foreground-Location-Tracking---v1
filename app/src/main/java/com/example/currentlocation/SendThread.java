@@ -33,7 +33,7 @@ class SendThread implements Runnable {
             BufferedReader input = new BufferedReader(new InputStreamReader(SockMngr.socket.getInputStream()));
             int numOfBytes = input.read(buff, 0, BUFFER_SIZE);
             String rsp = new String(buff, 0, numOfBytes);
-            Log.i("Ayelet", "run: result " + rsp);
+            Log.i("SendThread", "run: result " + rsp);
             SockMngr.response = rsp;
 
         } catch (UnknownHostException e) {
@@ -41,7 +41,7 @@ class SendThread implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         } catch (Exception e) {
-            Log.e("Ayelet", "onClick: ", e);
+            Log.e("SendThread", "onClick: ", e);
             e.printStackTrace();
         }
         SockMngr.notifyDone();

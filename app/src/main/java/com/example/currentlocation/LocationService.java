@@ -58,8 +58,12 @@ public class LocationService extends Service
                      double  latitude = location.getLatitude();
                      double longitude = location.getLongitude();
                      Log.d("Location update", latitude + ", " + longitude + ", " + getUserAddress());
-                    SockMngr.sendAndReceive(location.toString());
-                    Log.d("Response:", SockMngr.response);
+                     try {
+                         SockMngr.sendAndReceive(getUserAddress());
+                         Log.d("Server Response", SockMngr.response);
+                     } catch (Exception e) {
+                         e.printStackTrace();
+                     }
                 }
             }
         };
