@@ -11,7 +11,7 @@ import java.io.PrintWriter;
 import java.net.UnknownHostException;
 
 class SendThread implements Runnable {
-    private static final int BUFFER_SIZE = 100000;
+     private static final int BUFFER_SIZE = 100000;
     // a thread sending amd receiving
 
     @Override
@@ -28,10 +28,11 @@ class SendThread implements Runnable {
             out.flush(); // flushing to force write
 
             // receiving response
-            char[] buff = new char[BUFFER_SIZE];
-
+            char[] buff = new char[100000];
             BufferedReader input = new BufferedReader(new InputStreamReader(SockMngr.socket.getInputStream()));
-            int numOfBytes = input.read(buff, 0, BUFFER_SIZE);
+            int numOfBytes = input.read(buff, 0, 4);
+            int len = Integer.parseInt(new String(buff, 0, numOfBytes));
+            numOfBytes = input.read(buff, 0, len);
             String rsp = new String(buff, 0, numOfBytes);
             Log.i("SendThread", "run: result " + rsp);
             SockMngr.response = rsp;

@@ -18,6 +18,7 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -59,7 +60,21 @@ public class LocationService extends Service
                      double longitude = location.getLongitude();
                      Log.d("Location update", latitude + ", " + longitude + ", " + getUserAddress());
                      try {
-                         SockMngr.sendAndReceive(getUserAddress());
+                         //SockMngr.sendAndReceive(getUserAddress());
+                         SockMngr.sendAndReceive(location.getLatitude() + "," + location.getLongitude());
+
+                         if(SockMngr.response.equals("CODE RED"))
+                         {
+                             // pop notification
+                             NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+                                     .setSmallIcon(R.drawable.ic_baseline_error_24)
+                                     .setContentTitle("ALERT")
+                                     .setContentText("You are exposed to a person with Covid-19 ")
+                                     .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+                             NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+                             notificationManager.notify(1111, builder.build());
+                         }
                          Log.d("Server Response", SockMngr.response);
                      } catch (Exception e) {
                          e.printStackTrace();
