@@ -60,9 +60,8 @@ public class LocationService extends Service
                      double longitude = location.getLongitude();
                      Log.d("Location update", latitude + ", " + longitude + ", " + getUserAddress());
                      try {
-                         //SockMngr.sendAndReceive(getUserAddress());
                          SockMngr.sendAndReceive(location.getLatitude() + "," + location.getLongitude());
-
+                         // if an alert is received
                          if(SockMngr.response.equals("CODE RED"))
                          {
                              // pop notification
@@ -70,6 +69,7 @@ public class LocationService extends Service
                                      .setSmallIcon(R.drawable.ic_baseline_error_24)
                                      .setContentTitle("ALERT")
                                      .setContentText("You are exposed to a person with Covid-19 ")
+                                     .setAutoCancel(true)
                                      .setPriority(NotificationCompat.PRIORITY_DEFAULT);
                              NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
