@@ -3,8 +3,8 @@
     package="com.example.currentlocation">
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-    <uses-permission android:name="android.permission.INTERNET" ></uses-permission>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" ></uses-permission>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
 
     <application
@@ -24,6 +24,8 @@
 
         <service android:name=".LocationService"
             android:enabled="true"
+            android:foregroundServiceType="location"
+            android:stopWithTask="false"
             android:exported="false" />
     </application>
 

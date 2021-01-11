@@ -29,6 +29,7 @@ import java.util.List;
 
 public class LocationService extends Service
 {
+    private String TAG = LocationService.class.getSimpleName();
     private static final String CHANNEL_ID = "location_notification_channel"; // notification channel id
     private static final String CHANNEL_NAME = "Location Service"; // The user visible name of the notification channel
     private static final String CHANNEL_DESCRIPTION = "This channel is used by location service"; // notification channel description
@@ -41,60 +42,86 @@ public class LocationService extends Service
     private LocationRequest locationRequest; //
 
     // triggered when starting the service (every single time)
+
     @Override
-    public int onStartCommand(Intent intent, int flag, int startId)
-    {
+    public void onCreate() {
+        super.onCreate();
         locationCallBack = new LocationCallback()
         {
             //event that is triggered whenever the update interval is met
             @Override
             public void onLocationResult(LocationResult locationResult)
             {
+                Log.d("Location update", "*****onLocationResult, before if****");
                 super.onLocationResult(locationResult);
                 // if the location is available
                 if(locationResult!=null && locationResult.getLastLocation()!=null)
                 {
                     //handle location result
-                     location = locationResult.getLastLocation();
-                     double  latitude = location.getLatitude();
-                     double longitude = location.getLongitude();
-                     Log.d("Location update", latitude + ", " + longitude + ", " + getUserAddress());
-                     try {
-                         SockMngr.sendAndReceive(location.getLatitude() + "," + location.getLongitude());
-                         // if an alert is received
-                         if(SockMngr.response.equals("CODE RED"))
-                         {
-                             // pop notification
-                             NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
-                                     .setSmallIcon(R.drawable.ic_baseline_error_24)
-                                     .setContentTitle("ALERT")
-                                     .setContentText("You are exposed to a person with Covid-19 ")
-                                     .setAutoCancel(true)
-                                     .setPriority(NotificationCompat.PRIORITY_DEFAULT);
-                             NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-                             notificationManager.notify(1111, builder.build());
-                         }
-                         Log.d("Server Response", SockMngr.response);
-                     } catch (Exception e) {
-                         e.printStackTrace();
-                     }
+                    location = locationResult.getLastLocation();
+                    double  latitude = location.getLatitude();
+                    double longitude = location.getLongitude();
+                    Log.d(TAG ,latitude + ", " + longitude + ", " + getUserAddress());
+                    try {
+                        SockMngr.sendAndReceive(location.getLatitude() + "," + location.getLongitude());
+                        Log.d(TAG, SockMngr.response);
+                        // if an alert is received
+                        if(SockMngr.response.equals("CODE RED"))
+                        {
+                            Log.d(TAG, "EXPOSED");
+                            // pop notification
+//                            NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+//                                    .setSmallIcon(R.drawable.ic_baseline_error_24)
+//                                    .setContentTitle("ALERT")
+//                                    .setContentText("You are exposed to a person with Covid-19 ")
+//                                    .setAutoCancel(true)
+//                                    .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+//                            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+//
+//                            notificationManager.notify(1111, builder.build());
+                        }
+                    } catch (Exception e) {
+                        Log.d(TAG, "*****exception****");
+                        e.printStackTrace();
+                    }
                 }
+                Log.d(TAG, "*****finished function");
             }
         };
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flag, int startId)
+    {
+
+
         // start location service
         startLocationService();
         //  return the value that indicates what semantics the system should use for the service's current started state
-        return super.onStartCommand(intent, flag, startId);
+        return START_STICKY;
     }
 
     // called through stopService() and stops the service
     @Override
     public void onDestroy()
     {
+        Log.d(TAG, "*****DESTROY****");
         stopLocationService();
     }
 
+    @Override
+    public boolean stopService(Intent name) {
+        Log.d(TAG,"STOP SERVICE");
+        stopLocationService();
+        return super.stopService(name);
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        Log.d(TAG,"ON TASK REMOVED");
+
+        super.onTaskRemoved(rootIntent);
+    }
 
     // starts the service
     @SuppressLint("MissingPermission")
@@ -144,12 +171,15 @@ public class LocationService extends Service
 
     private void stopLocationService()
     {
+        Log.d("location", "*****STOPPED****");
         // Remove all location updates for the given location result listener
         LocationServices.getFusedLocationProviderClient(this).removeLocationUpdates(locationCallBack);
         // stop the service and remove the notification
         stopForeground(true);
         stopSelf();
     }
+
+
 
 
     private String getUserAddress()

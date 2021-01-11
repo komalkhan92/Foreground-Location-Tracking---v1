@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.CompoundButton;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -67,6 +68,7 @@ public class MainActivity extends AppCompatActivity
                 }
                 else
                 {
+                    Log.d("Location Update", "Button clicked");
                     // the button has been switched off - stop location service
                     stopLocationService();
                 }
