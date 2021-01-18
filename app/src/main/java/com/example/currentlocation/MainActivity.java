@@ -7,12 +7,21 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
@@ -25,6 +34,12 @@ public class MainActivity extends AppCompatActivity
 
     private final static int PERMISSION_FINE_LOCATION = 1; //permission request number, identifies the permission
     private ToggleButton toggle; // used to switch the service on and off
+    private Dialog dialog;
+    private EditText dialogEt;
+    private String username;
+    private Button doneBtn;
+    private SharedPreferences mPreferences;
+    private SharedPreferences.Editor mEditor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -71,9 +86,19 @@ public class MainActivity extends AppCompatActivity
                     Log.d("Location Update", "Button clicked");
                     // the button has been switched off - stop location service
                     stopLocationService();
+                    // disconnect from server
+                    SockMngr.sendAndReceive("QUIT");
                 }
             }
         });
+
+        mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        mEditor = mPreferences.edit();
+
+        if(mPreferences.getString("username", "").equals(""))
+        {
+            createAndHandleDialog();
+        }
     }
 
 
@@ -152,5 +177,68 @@ public class MainActivity extends AppCompatActivity
             stopService(intent);
             Toast.makeText(this, "Location Service stopped", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void createAndHandleDialog()
+    {
+        // create dialog
+        dialog = new Dialog(MainActivity.this);
+        dialog.setContentView(R.layout.custom_dialog);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+        {
+            dialog.getWindow().setBackgroundDrawable(getDrawable(R.drawable.background));
+        }
+        dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        dialog.setCancelable(false);
+        dialog.getWindow().getAttributes().windowAnimations = R.style.animation;
+        dialog.show();
+        TextView errorTv = dialog.findViewById(R.id.errorTv);
+
+        // initiate done button
+        doneBtn = dialog.findViewById(R.id.doneBtn);
+        doneBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v)
+            {
+                errorTv.setVisibility(View.INVISIBLE);
+                // ** add wait **
+                dialogEt = dialog.findViewById(R.id.dialogEt);
+                username = dialogEt.getText().toString();
+                if(isUsernameFree(username))
+                {
+                    mEditor.putString("username", username);
+                    mEditor.commit();
+                    dialog.dismiss();
+                }
+                else
+                {
+                    // otherwise present an error
+                    errorTv.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+    }
+
+    private boolean isUsernameFree(String username)
+    {
+        // connect to server
+        try {
+            // initiate socket
+            SockMngr.initiate();
+            // send username
+            SockMngr.sendAndReceive(username);
+            boolean b = false;
+            if(SockMngr.response.equals("FREE"))
+            {
+                b = true;
+            }
+            // disconnect from server
+            SockMngr.sendAndReceive("QUIT");
+            return b;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return true;
     }
 }

@@ -8,12 +8,14 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -40,6 +42,8 @@ public class LocationService extends Service
                                                 // when the device location has changed or can no longer be determined
     private Location location; // last known location or updated location
     private LocationRequest locationRequest; //
+    private SharedPreferences mPreferences;
+    private SharedPreferences.Editor mEditor;
 
     // triggered when starting the service (every single time)
 
@@ -54,6 +58,8 @@ public class LocationService extends Service
             {
                 Log.d("Location update", "*****onLocationResult, before if****");
                 super.onLocationResult(locationResult);
+                // get username from shared preferences
+                String username = get_username();
                 // if the location is available
                 if(locationResult!=null && locationResult.getLastLocation()!=null)
                 {
@@ -63,22 +69,22 @@ public class LocationService extends Service
                     double longitude = location.getLongitude();
                     Log.d(TAG ,latitude + ", " + longitude + ", " + getUserAddress());
                     try {
-                        SockMngr.sendAndReceive(location.getLatitude() + "," + location.getLongitude());
+                        SockMngr.sendAndReceive(location.getLatitude() + "," + location.getLongitude() + "," + username);
                         Log.d(TAG, SockMngr.response);
                         // if an alert is received
                         if(SockMngr.response.equals("CODE RED"))
                         {
                             Log.d(TAG, "EXPOSED");
                             // pop notification
-//                            NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
-//                                    .setSmallIcon(R.drawable.ic_baseline_error_24)
-//                                    .setContentTitle("ALERT")
-//                                    .setContentText("You are exposed to a person with Covid-19 ")
-//                                    .setAutoCancel(true)
-//                                    .setPriority(NotificationCompat.PRIORITY_DEFAULT);
-//                            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-//
-//                            notificationManager.notify(1111, builder.build());
+                            NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+                                    .setSmallIcon(R.drawable.ic_baseline_error_24)
+                                    .setContentTitle("ALERT")
+                                    .setContentText("You are exposed to a person with Covid-19 ")
+                                    .setAutoCancel(true)
+                                    .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+                            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+                            notificationManager.notify(1111, builder.build());
                         }
                     } catch (Exception e) {
                         Log.d(TAG, "*****exception****");
@@ -223,5 +229,13 @@ public class LocationService extends Service
     public IBinder onBind(Intent intent)
     {
         return null;
+    }
+
+    public String get_username()
+    {
+        mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        mEditor = mPreferences.edit();
+        String username = mPreferences.getString("username", "");
+        return username;
     }
 }

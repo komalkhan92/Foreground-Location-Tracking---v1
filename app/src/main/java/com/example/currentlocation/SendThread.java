@@ -27,15 +27,18 @@ class SendThread implements Runnable {
             out.print(msg_len + SockMngr.text2send);
             out.flush(); // flushing to force write
 
-            // receiving response
-            char[] buff = new char[100000];
-            BufferedReader input = new BufferedReader(new InputStreamReader(SockMngr.socket.getInputStream()));
-            int numOfBytes = input.read(buff, 0, 4);
-            int len = Integer.parseInt(new String(buff, 0, numOfBytes));
-            numOfBytes = input.read(buff, 0, len);
-            String rsp = new String(buff, 0, numOfBytes);
-            Log.i("SendThread", "run: result " + rsp);
-            SockMngr.response = rsp;
+            if (!SockMngr.text2send.equals("QUIT"))
+            {
+                // receiving response
+                char[] buff = new char[100000];
+                BufferedReader input = new BufferedReader(new InputStreamReader(SockMngr.socket.getInputStream()));
+                int numOfBytes = input.read(buff, 0, 4);
+                int len = Integer.parseInt(new String(buff, 0, numOfBytes));
+                numOfBytes = input.read(buff, 0, len);
+                String rsp = new String(buff, 0, numOfBytes);
+                Log.i("SendThread", "run: result " + rsp);
+                SockMngr.response = rsp;
+            }
 
         } catch (UnknownHostException e) {
             e.printStackTrace();
